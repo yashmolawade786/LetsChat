@@ -23,21 +23,28 @@ const Sidebar = () => {
     getUsers();
   }, [getUsers]);
 
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  const filteredUsers =
+    showOnlineOnly && Array.isArray(users)
+      ? users.filter((user) => onlineUsers?.includes(user._id))
+      : users || [];
 
   // Helper: get latest activity (for now, use unreadCounts as fallback, or sort alphabetically)
   // In a real app, you would use the last message timestamp per chat.
-  const getActivity = (user) => unreadCounts[user._id] || 0;
+  const getActivity = (user) =>
+    unreadCounts && user ? unreadCounts[user._id] || 0 : 0;
 
   // Split and sort chats
-  const pinned = filteredUsers
-    .filter((u) => pinnedChats.includes(u._id))
-    .sort((a, b) => getActivity(b) - getActivity(a));
-  const unpinned = filteredUsers
-    .filter((u) => !pinnedChats.includes(u._id))
-    .sort((a, b) => getActivity(b) - getActivity(a));
+  const pinned = Array.isArray(filteredUsers)
+    ? filteredUsers
+        .filter((u) => pinnedChats?.includes(u._id))
+        .sort((a, b) => getActivity(b) - getActivity(a))
+    : [];
+
+  const unpinned = Array.isArray(filteredUsers)
+    ? filteredUsers
+        .filter((u) => !pinnedChats?.includes(u._id))
+        .sort((a, b) => getActivity(b) - getActivity(a))
+    : [];
   const sortedUsers = [...pinned, ...unpinned];
 
   if (isUsersLoading) return <SidebarSkeleton />;

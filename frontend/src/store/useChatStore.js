@@ -18,13 +18,15 @@ export const useChatStore = create((set, get) => ({
   getUsers: async () => {
     set({ isUsersLoading: true });
     try {
-      const res = await axiosInstance.get("/messages/users");
-      set({ users: res.data });
+      const res = await axiosInstance.get("/api/messages/users");
+      set({ users: res.data || [] });
       // Fetch pinned chats for the logged-in user
-      const userRes = await axiosInstance.get("/auth/check");
+      const userRes = await axiosInstance.get("/api/auth/check");
       set({ pinnedChats: userRes.data.pinnedChats || [] });
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.error("Error fetching users:", error);
+      set({ users: [] }); // Ensure users is an empty array on error
+      toast.error(error.response?.data?.message || "Failed to fetch users");
     } finally {
       set({ isUsersLoading: false });
     }
@@ -33,7 +35,7 @@ export const useChatStore = create((set, get) => ({
   getMessages: async (userId) => {
     set({ isMessagesLoading: true });
     try {
-      const res = await axiosInstance.get(`/messages/${userId}`);
+      const res = await axiosInstance.get(`/api/messages/${userId}`);
       set({ messages: res.data });
       // Clear unread count when opening chat
       set((state) => ({
@@ -53,7 +55,7 @@ export const useChatStore = create((set, get) => ({
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(
-        `/messages/send/${selectedUser._id}`,
+        `/api/messages/send/${selectedUser._id}`,
         messageData
       );
       set({ messages: [...messages, res.data] });
@@ -64,7 +66,7 @@ export const useChatStore = create((set, get) => ({
 
   markMessagesAsRead: async (userId) => {
     try {
-      await axiosInstance.post(`/messages/mark-read/${userId}`);
+      await axiosInstance.post(`/api/messages/mark-read/${userId}`);
       set((state) => ({
         unreadCounts: {
           ...state.unreadCounts,
@@ -78,15 +80,16 @@ export const useChatStore = create((set, get) => ({
 
   pinChat: async (chatId) => {
     try {
-      const res = await axiosInstance.post(`/messages/pin/${chatId}`);
+      const res = await axiosInstance.post(`/api/messages/pin/${chatId}`);
       set({ pinnedChats: res.data.pinnedChats });
     } catch (error) {
       toast.error("Failed to pin chat");
     }
   },
+
   unpinChat: async (chatId) => {
     try {
-      const res = await axiosInstance.post(`/messages/unpin/${chatId}`);
+      const res = await axiosInstance.post(`/api/messages/unpin/${chatId}`);
       set({ pinnedChats: res.data.pinnedChats });
     } catch (error) {
       toast.error("Failed to unpin chat");
