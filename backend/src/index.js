@@ -18,13 +18,21 @@ const __dirname = path.resolve();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://letschat-1-mnk2.onrender.com",
+];
+
 app.use(
   cors({
-    origin: "https://letschat-1-mnk2.onrender.com",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    exposedHeaders: ["set-cookie"],
   })
 );
 
